@@ -1,0 +1,5 @@
+data/*
+backend.shipping-service
+fullstack-tutorial/start/client/node_modules/*
+fullstack-tutorial/start/server/node_modules/*
+fullstack-tutorial/.git
