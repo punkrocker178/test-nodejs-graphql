@@ -3,7 +3,7 @@ version: '3.1'
 services:
   node:
     container_name: test_node
-    image: node:14.15.1
+    image: node:12.18.3-stretch
     restart: always
     working_dir: /app
     volumes: 

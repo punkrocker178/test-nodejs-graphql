@@ -23,3 +23,11 @@ and
 ```bash
 cd final/client && npm i && npm start
 ```
+
+```bash
+docker run -it --rm  -p 8888:4000 -v /fullstack-tutorial/start/server/:/app -w /app node:12.18.3-stretch npm i && npm start
+```
+
+```bash
+docker run -it --rm  -p 8889:80 -v /fullstack-tutorial/start/client/:/app -w /app node:12.18.3-stretch npm i && npm start
+```
