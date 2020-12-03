@@ -34,6 +34,8 @@ export interface GetLaunchList_launches {
 }
 
 export interface GetLaunchList {
+  cursor: string;
+  hasMore: boolean;
   launches: GetLaunchList_launches;
 }
 
