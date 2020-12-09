@@ -3,8 +3,10 @@ version: '3.1'
 services:
   node:
     container_name: test_node
-    image: node:12.18.3-stretch
+    image: node:14.15.1
     restart: always
+    ports: 
+      - 3001:3000
     working_dir: /app
     volumes: 
       - /home/steve178/Test/express:/app
