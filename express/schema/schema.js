@@ -1,27 +1,17 @@
 const graphql = require('graphql');
+const Game = require('../models/game');
+const Publisher = require('../models/publisher');
 
-const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLList } = graphql;
-
-let games = [
-    {name: 'Cyberpunk 2077', id: '1', genre: 'RPG', publisherId: '1'},
-    {name: 'The Witcher 3: Wild Hunt', id: '2', genre: 'RPG', publisherId: '1'},
-    {name: '7 Days To Die', id: '3', genre: 'Survival', publisherId: '2'}
-]
-
-let publishers = [
-    {id: '1', name: 'CD Projek Red'},
-    {id: '2', name: 'The Fun Pimps'}
-]
+const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLList, GraphQLID } = graphql;
 
 const GameType = new GraphQLObjectType({
     name: 'Game',
     fields: () => ({
-        id: {type: GraphQLString},
-        name: {type: GraphQLString},
-        genre: {type: GraphQLString},
+        name: { type: GraphQLString },
+        genre: { type: GraphQLString },
         publisher: {
             type: PublisherType,
-            resolve: (parent, args) => publishers.find(publisher => publisher.id == parent.publisherId)
+            resolve: (parent, args) => Game.findById(parent.publisherId)
         }
     })
 });
@@ -29,15 +19,50 @@ const GameType = new GraphQLObjectType({
 const PublisherType = new GraphQLObjectType({
     name: 'publisher',
     fields: () => ({
-        id: {type: GraphQLString},
-        name: {type: GraphQLString},
+        name: { type: GraphQLString },
         games: {
             type: GraphQLList(GameType),
             resolve: (parent, args) => {
-                return games.filter(game => game.publisherId == parent.id)
+                return Game.find({
+                    publisherId: parent.id
+                });
             }
         }
     })
+});
+
+const Mutation = new GraphQLObjectType({
+    name: 'Mutation',
+    fields: {
+        addPublisher: {
+            type: PublisherType,
+            args: {
+                name: { type: GraphQLString }
+            },
+            resolve: (parent, args) => {
+                let publisher = new Publisher({
+                    name: args.name
+                });
+                return publisher.save();
+            }
+        },
+        addGame: {
+            type: GameType,
+            args: {
+                name: { type: GraphQLString },
+                genre: { type: GraphQLString },
+                publisherId: { type: GraphQLString }
+            },
+            resolve: (parent, args) => {
+                let game = new Game({
+                    name: args.name,
+                    genre: args.genre,
+                    publisherId: args.publisherId
+                });
+                return game.save();
+            }
+        }
+    }
 })
 
 const RootQuery = new GraphQLObjectType({
@@ -46,30 +71,31 @@ const RootQuery = new GraphQLObjectType({
         game: {
             type: GameType,
             args: {
-                id: {type: GraphQLString}
+                id: { type: GraphQLID }
             },
             resolve(parent, args) {
-                return games.find(game => game.id == args.id);
+                return Game.findById(args.id);
             }
         },
         publisher: {
             type: PublisherType,
-            args: {id: {type: GraphQLString}},
+            args: { id: { type: GraphQLID } },
             resolve(parent, args) {
-                return publishers.find(publisher => publisher.id == args.id);
+                return Publisher.findById(args.id);
             }
         },
         games: {
             type: GraphQLList(GameType),
-            resolve: (parent, args) => games
+            resolve: (parent, args) => Game.find({})
         },
         publishers: {
             type: GraphQLList(PublisherType),
-            resolve: (parent, args) => publishers
+            resolve: (parent, args) => Publisher.find({})
         }
     }
 });
 
 module.exports = new GraphQLSchema({
-    query: RootQuery 
+    query: RootQuery,
+    mutation: Mutation
 })
