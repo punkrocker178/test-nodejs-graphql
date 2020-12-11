@@ -1,9 +1,106 @@
 const graphql = require('graphql');
 const Game = require('../models/game');
 const Publisher = require('../models/publisher');
+const { SchemaComposer } = require('graphql-compose');
+const { find } = require('../models/game');
 
 const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLList, GraphQLID } = graphql;
 
+/* --- GraphQL compose --- */ 
+const schemaComposer = new SchemaComposer();
+
+const GameTC = schemaComposer.createObjectTC({
+    name: 'Game',
+    fields: {
+        name: 'String',
+        genre: 'String',
+        publisherId: 'String'
+    }
+});
+
+const PublisherTC = schemaComposer.createObjectTC({
+    name: 'Publisher',
+    fields: {
+        name: 'String',
+    }
+})
+
+GameTC.addFields({
+    publisher: {
+        type: PublisherTC,
+        resolve: (parent, args) => Publisher.findById(parent.publisherId)
+    }
+})
+
+PublisherTC.addFields({
+    games: {
+        type: [GameTC],
+        resolve: (parent, args) => Game.find({
+            publisherId: parent.id
+        })
+    }
+})
+
+schemaComposer.Query.addFields({
+    games: {
+        type: [GameTC],
+        resolve: () => Game.find({})
+    },
+    publishers: {
+        type: [PublisherTC],
+        resolve: () => Publisher.find({})
+    },
+    game: {
+        type: GameTC,
+        args: {
+            id: 'String'
+        },
+        resolve: (_, args) => Game.findById(args.id)
+    },
+    publisher: {
+        type: PublisherTC,
+        args: {
+            id: 'String'
+        },
+        resolve: (_, args) => Publisher.findById(args.id)
+    }
+});
+
+const mutationQueries = {
+    addPublisher: {
+        type: PublisherTC,
+        args: {
+            name: 'String'
+        },
+        resolve: (parent, args) => {
+            let publisher = new Publisher({
+                name: args.name
+            });
+            return publisher.save();
+        }
+    },
+    addGame: {
+        type: GameTC,
+        args: {
+            name: 'String',
+            genre: 'String',
+            publisherId: 'String'
+        },
+        resolve: (parent, args) => {
+            let game = new Game({
+                name: args.name,
+                genre: args.genre,
+                publisherId: args.publisherId
+            });
+            return game.save();
+        }
+    }
+}
+
+schemaComposer.Mutation.addFields(mutationQueries);
+
+
+/* --- Basic GraphQL --- */
 const GameType = new GraphQLObjectType({
     name: 'Game',
     fields: () => ({
@@ -95,7 +192,9 @@ const RootQuery = new GraphQLObjectType({
     }
 });
 
-module.exports = new GraphQLSchema({
-    query: RootQuery,
-    mutation: Mutation
-})
+// module.exports = new GraphQLSchema({
+//     query: RootQuery,
+//     mutation: Mutation
+// })
+
+module.exports = schemaComposer.buildSchema();
