@@ -1,5 +1,5 @@
 const axios = require('axios');
-const gameModel = require('../models/game-model');
+const GameModel = require('../models/game-model');
 
 const axiosClient = axios.default;
 
@@ -17,7 +17,7 @@ const getGames = () => {
         const data = res.data.results;
         const arr = [];
         data.forEach(game => {
-            let model = gameModel;
+            let model = new GameModel();
             model.name = game.name;
             model.ratings = game.rating;
             model.ratingsCount;
