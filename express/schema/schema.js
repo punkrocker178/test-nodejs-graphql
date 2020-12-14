@@ -1,13 +1,13 @@
 const graphql = require('graphql');
 const Game = require('../models/game');
 const Publisher = require('../models/publisher');
-const { SchemaComposer } = require('graphql-compose');
-const { find } = require('../models/game');
-
+const { schemaComposer } = require('graphql-compose');
+const GameModel = require('../models/game-model');
+const GameModelTC = require('../composers/game-model');
+const getGamesResovler = require('../resolvers/game-resolver');
 const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLList, GraphQLID } = graphql;
 
-/* --- GraphQL compose --- */ 
-const schemaComposer = new SchemaComposer();
+/* --- GraphQL compose --- */
 
 const GameTC = schemaComposer.createObjectTC({
     name: 'Game',
@@ -41,7 +41,20 @@ PublisherTC.addFields({
     }
 })
 
+GameModelTC.addResolver({
+    name: 'FindManyGames',
+    type: [GameModelTC],
+    args: {
+        apiParty: 'String'
+    },
+    resolve: async (resolveParams) => {
+        const res = await getGamesResovler(resolveParams.args.apiParty);
+        return res;
+    }
+});
+
 schemaComposer.Query.addFields({
+    gameAPI: GameModelTC.getResolver('FindManyGames'),
     games: {
         type: [GameTC],
         resolve: () => Game.find({})
@@ -197,4 +210,4 @@ const RootQuery = new GraphQLObjectType({
 //     mutation: Mutation
 // })
 
-module.exports = schemaComposer.buildSchema();
+module.exports = schemaComposer.buildSchema()

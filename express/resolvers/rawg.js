@@ -8,9 +8,10 @@ const endpoint = 'https://api.rawg.io/api';
 const apiKey = '2b809fde8c4c417caddec876b4f4244a';
 
 const getGames = () => {
-    axiosClient.get(`${endpoint}/games`, {
+    return axiosClient.get(`${endpoint}/games`, {
         params: {
-            key: apiKey
+            key: apiKey,
+            page_size: 2
         }
     }).then((res) => {
         const data = res.data.results;
@@ -24,10 +25,11 @@ const getGames = () => {
             model.image = game.background_image;
             model.category = game.genres;
             arr.push(model);
-            console.log(model);
         });
-        
+
+        return arr;
+
     });
 }
 
-module.exports = {getGames};
+module.exports = { getGames };
